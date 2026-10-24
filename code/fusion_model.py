@@ -26,9 +26,9 @@ repo), since it imports functions from it directly.
 --------------------------------------------------------------------------
 USAGE (same workbook holds behavioral columns + bio + tweet sheets)
 --------------------------------------------------------------------------
-python fusion_model.py --dataset d1 --behavioral-file ../datasets/dataset1.xlsx --user-file ../datasets/dataset1.xlsx --tweet-file ../datasets/dataset1.xlsx --tweet-sheet tweets_meta_data --output-dir ../results_fusion_d1
+python fusion_model.py --dataset d1 --behavioral-file ../datasets/dataset1.xlsx --user-file ../datasets/dataset1.xlsx --tweet-file ../datasets/dataset1.xlsx --tweet-sheet tweets_meta_data --output-dir ../Human_Labels/results_fusion_d1
 
-python fusion_model.py --dataset d2 --behavioral-file ../datasets/dataset2.xlsx --user-file ../datasets/dataset2.xlsx --tweet-file ../datasets/dataset2.xlsx --tweet-sheet tweetsMetaData_1 tweetsMetaData_2 --output-dir ../results_fusion_d2 --label-column Predicted_Label
+python fusion_model.py --dataset d2 --behavioral-file ../datasets/all_users_.xlsx --user-file ../datasets/all_users_.xlsx --tweet-file ../datasets/all_users_.xlsx --tweet-sheet tweetsMetaData_1 tweetsMetaData_2 --output-dir ../Human_Labels/results_fusion_d2 --label-column prob1 --probability-threshold 0.5
 
 For dataset 2 you must also pass --label-column if it isn't "final-tag" in
 that workbook (same requirement as run_text_tfidf2.py).
@@ -322,6 +322,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--tweet-sheet", nargs="+", default=None,
                    help="One or more tweet sheet names (e.g. --tweet-sheet tweetMetaData_1 tweetMetaData_2).")
     p.add_argument("--label-column", default="final-tag")
+    p.add_argument(
+        "--probability-threshold", type=float, default=0.5,
+        help="For probability-valued label columns (e.g. prob1), values >= threshold are bots (1), lower values are humans (0). Default: 0.5."
+    )
     p.add_argument("--positive-label", default="bot")
     p.add_argument("--negative-label", default="human")
     p.add_argument("--tweet-user-id-column", default=None)
@@ -355,6 +359,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if not 0.0 <= args.probability_threshold <= 1.0:
+        raise SystemExit("--probability-threshold must be between 0 and 1.")
 
     # ---- behavioral side ----
     behavioral_df = read_sheet(args.behavioral_file, args.behavioral_sheet)
@@ -412,8 +418,18 @@ def main() -> None:
         raise SystemExit(
             "No users matched between --behavioral-file and --user-file/--tweet-file after the id join.")
 
-    merged["__y"] = merged[args.label_column].map(
-        lambda v: canonical_label(v, args.positive_label, args.negative_label))
+    if args.label_column.casefold() == "prob1":
+        # prob1 is a bot probability, not a categorical label.
+        # Preserve the existing categorical-label path for every other column.
+        prob = pd.to_numeric(merged[args.label_column], errors="coerce")
+        valid_prob = prob.between(0.0, 1.0, inclusive="both")
+        merged["__y"] = np.nan
+        merged.loc[valid_prob, "__y"] = (
+            prob.loc[valid_prob] >= args.probability_threshold
+        ).astype(int)
+    else:
+        merged["__y"] = merged[args.label_column].map(
+            lambda v: canonical_label(v, args.positive_label, args.negative_label))
     eligible = merged[merged["__y"].notna()].copy()
     if args.require_nonempty_text:
         eligible = eligible[eligible["text_document"].ne("")]

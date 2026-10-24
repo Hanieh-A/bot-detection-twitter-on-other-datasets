@@ -9,6 +9,7 @@ python run_text_tfidf2.py --dataset d1 --user-file ../datasets/dataset1.xlsx --u
 python run_text_tfidf2.py --dataset d2 --user-file ../datasets/all_users_.xlsx --user-sheet main --tweet-file ../datasets/all_users_.xlsx --tweet-sheet tweetsMetaData_1 tweetsMetaData_2 --label-column prob1 --user-id-column user_id --tweet-user-id-column id --bio-column clean_description --tweet-text-column text --output-dir ../Human_Labels/results_text_tfidf_word_d2
 """
 from __future__ import annotations
+import matplotlib.pyplot as plt
 
 import argparse
 import json
@@ -33,7 +34,6 @@ from sklearn.pipeline import Pipeline
 
 import matplotlib
 matplotlib.use('Agg')  # Save figures in headless environments
-import matplotlib.pyplot as plt
 
 SEED = 42
 
@@ -354,7 +354,6 @@ def nested_oof(X: list[str], y: np.ndarray, args: argparse.Namespace) -> tuple[n
     return oof, np.array([r["selected_threshold"] for r in fold_rows]), fold_rows
 
 
-
 def save_report_figures(
     outdir: Path,
     y: np.ndarray,
@@ -433,8 +432,10 @@ def save_report_figures(
     precision, recall, _ = precision_recall_curve(y, oof)
     baseline = float(np.mean(y))
     fig, ax = plt.subplots(figsize=(6, 5))
-    ax.plot(recall, precision, label=f"Average Precision = {aggregate['average_precision']:.3f}")
-    ax.axhline(baseline, linestyle="--", label=f"Bot prevalence = {baseline:.3f}")
+    ax.plot(recall, precision,
+            label=f"Average Precision = {aggregate['average_precision']:.3f}")
+    ax.axhline(baseline, linestyle="--",
+               label=f"Bot prevalence = {baseline:.3f}")
     ax.set(xlim=(0, 1), ylim=(0, 1.02), xlabel="Recall", ylabel="Precision",
            title="Precision–Recall Curve (Out-of-Fold)")
     ax.grid(alpha=0.25)
@@ -466,10 +467,13 @@ def save_report_figures(
         ("roc_auc", "ROC-AUC"),
         ("average_precision", "AP"),
     ]
-    available = [(col, label) for col, label in metric_cols if col in fold_df.columns]
+    available = [(col, label)
+                 for col, label in metric_cols if col in fold_df.columns]
     if available:
-        means = [pd.to_numeric(fold_df[col], errors="coerce").mean() for col, _ in available]
-        stds = [pd.to_numeric(fold_df[col], errors="coerce").std(ddof=0) for col, _ in available]
+        means = [pd.to_numeric(fold_df[col], errors="coerce").mean()
+                 for col, _ in available]
+        stds = [pd.to_numeric(fold_df[col], errors="coerce").std(
+            ddof=0) for col, _ in available]
         fig, ax = plt.subplots(figsize=(8, 4.8))
         positions = np.arange(len(available))
         ax.bar(positions, means, yerr=stds, capsize=4)
@@ -481,6 +485,7 @@ def save_report_figures(
         fig.tight_layout()
         fig.savefig(outdir / "fold_metric_stability.png", bbox_inches="tight")
         plt.close(fig)
+
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
@@ -496,6 +501,10 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--label-column", default=None,
                    help="D1 defaults to final-tag. D2 must be specified explicitly.")
+    p.add_argument(
+        "--probability-threshold", type=float, default=0.5,
+        help="For probability-valued label columns (e.g. prob1), values >= threshold are bots (1), lower values are humans (0). Default: 0.5."
+    )
     p.add_argument("--positive-label", default="bot")
     p.add_argument("--negative-label", default="human")
     p.add_argument("--user-id-column", default=None)
@@ -519,6 +528,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if not 0.0 <= args.probability_threshold <= 1.0:
+        raise SystemExit("--probability-threshold must be between 0 and 1.")
     if args.dataset == "d2" and not args.label_column:
         raise SystemExit(
             "Dataset 2 requires --label-column. Verify label provenance first; do not blindly use Predicted_Label if it came from the behavioral model.")
@@ -550,8 +561,19 @@ def main() -> None:
                                           tweet_user_id_col=args.tweet_user_id_column, bio_col=args.bio_column,
                                           tweet_text_col=args.tweet_text_column, timestamp_col=args.tweet_timestamp_column,
                                           max_tweets=args.max_tweets)
-    frame["__y"] = frame[label_col].map(lambda v: canonical_label(
-        v, args.positive_label, args.negative_label))
+    if label_col.casefold() == "prob1":
+        # prob1 is a bot-probability, not a categorical label:
+        # probability >= threshold -> bot (1), probability < threshold -> human (0).
+        # Missing/non-numeric/out-of-range values remain unlabeled and are excluded.
+        prob = pd.to_numeric(frame[label_col], errors="coerce")
+        valid_prob = prob.between(0.0, 1.0, inclusive="both")
+        frame["__y"] = np.nan
+        frame.loc[valid_prob, "__y"] = (
+            prob.loc[valid_prob] >= args.probability_threshold
+        ).astype(int)
+    else:
+        frame["__y"] = frame[label_col].map(lambda v: canonical_label(
+            v, args.positive_label, args.negative_label))
     # Exclude ambiguous labels and empty text. Never silently convert uncertain/News Agent to human.
     eligible = frame[frame["__y"].notna(
     ) & frame["text_document"].ne("")].copy()

@@ -52,7 +52,8 @@ def _clean_botometer(v):
 
 
 def load_custom_v2(xlsx_path, max_tweets_per_user=20):
-    users = pd.read_excel(xlsx_path, sheet_name="1k_users")
+    # users = pd.read_excel(xlsx_path, sheet_name="1k_users")
+    users = pd.read_excel(xlsx_path, sheet_name="Sheet1")
     tweets = pd.read_excel(xlsx_path, sheet_name="tweets_meta_data")
 
     users["label_raw"] = users[FINAL_LABEL_COL].apply(_parse_final_label)
