@@ -1,0 +1,34 @@
+{
+  "n_users": 943,
+  "positive_rate": 0.051961823966065745,
+  "precision_bot": 0.07692307692307693,
+  "recall_bot": 0.02040816326530612,
+  "f1_bot": 0.03225806451612903,
+  "average_precision": 0.09916062641173054,
+  "roc_auc": 0.5885951696114687,
+  "accuracy": 0.936373276776246,
+  "threshold": 0.5,
+  "confusion_matrix_tn_fp_fn_tp": [
+    882,
+    12,
+    48,
+    1
+  ],
+  "threshold_note": "Ranking metrics use OOF probabilities; precision/recall/F1/accuracy use each outer fold's threshold selected from inner OOF predictions.",
+  "threshold_median": 0.3816831928719283,
+  "n_bot": 49,
+  "n_human": 894,
+  "dataset": "d1",
+  "experiment": "text_tfidf_word_d1",
+  "label_column": "LLM-final-tag",
+  "precision_bot_nested_threshold": 0.10714285714285714,
+  "recall_bot_nested_threshold": 0.3673469387755102,
+  "f1_bot_nested_threshold": 0.16589861751152074,
+  "accuracy_nested_threshold": 0.8080593849416755,
+  "confusion_matrix_nested_threshold_tn_fp_fn_tp": [
+    744,
+    150,
+    31,
+    18
+  ]
+}

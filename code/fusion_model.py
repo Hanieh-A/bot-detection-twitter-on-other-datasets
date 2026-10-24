@@ -26,9 +26,9 @@ repo), since it imports functions from it directly.
 --------------------------------------------------------------------------
 USAGE (same workbook holds behavioral columns + bio + tweet sheets)
 --------------------------------------------------------------------------
-python fusion_model.py --dataset d1 --behavioral-file ../datasets/dataset1.xlsx --user-file ../datasets/dataset1.xlsx --tweet-file ../datasets/dataset1.xlsx --tweet-sheet tweets_meta_data --output-dir ../Human_Labels/results_fusion_d1
+python fusion_model.py --dataset d1 --behavioral-file ../datasets/dataset1.xlsx --user-file ../datasets/dataset1.xlsx --tweet-file ../datasets/dataset1.xlsx --tweet-sheet tweets_meta_data --output-dir ../LLM_Labels/results_fusion_d1 --label-column LLM-final-tag
 
-python fusion_model.py --dataset d2 --behavioral-file ../datasets/all_users_.xlsx --user-file ../datasets/all_users_.xlsx --tweet-file ../datasets/all_users_.xlsx --tweet-sheet tweetsMetaData_1 tweetsMetaData_2 --output-dir ../Human_Labels/results_fusion_d2 --label-column prob1 --probability-threshold 0.5
+python fusion_model.py --dataset d2 --behavioral-file ../datasets/all_users_.xlsx --user-file ../datasets/all_users_.xlsx --tweet-file ../datasets/all_users_.xlsx --tweet-sheet tweetsMetaData_1 tweetsMetaData_2 --output-dir ../LLM_Labels/results_fusion_d2 --label-column classification
 
 For dataset 2 you must also pass --label-column if it isn't "final-tag" in
 that workbook (same requirement as run_text_tfidf2.py).

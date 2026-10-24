@@ -24,7 +24,8 @@ import numpy as np
 import pandas as pd
 
 # FINAL_LABEL_COL = "final-tag"
-FINAL_LABEL_COL = "human-final-tag"
+# FINAL_LABEL_COL = "human-final-tag"
+FINAL_LABEL_COL = "LLM-final-tag"
 
 EXTRA_RAW_COLS = [
     'tweet_frequency', 'retweet_ratio', 'mean_no_hashtags', 'mean_no_words',
@@ -37,11 +38,28 @@ EXTRA_RAW_COLS = [
 ]
 
 
+
 def _parse_final_label(v):
     if pd.isna(v):
         return np.nan
+
+    # Handle numeric labels in parentheses, e.g. bot(1), human(2)
     m = re.search(r'\((\d+)\)', str(v))
-    return float(m.group(1)) if m else np.nan
+    if m:
+        return float(m.group(1))
+
+    # Handle text-only labels, e.g. Bot, Human, News Agent
+    label = str(v).strip().lower()
+
+    label_mapping = {
+        "bot": 1,
+        "human": 2,
+        "news agent": 3,
+        "unverified": 4,
+    }
+
+    return float(label_mapping[label]) if label in label_mapping else np.nan
+
 
 
 def _clean_botometer(v):
@@ -52,8 +70,7 @@ def _clean_botometer(v):
 
 
 def load_custom_v2(xlsx_path, max_tweets_per_user=20):
-    # users = pd.read_excel(xlsx_path, sheet_name="1k_users")
-    users = pd.read_excel(xlsx_path, sheet_name="Sheet1")
+    users = pd.read_excel(xlsx_path, sheet_name="1k_users")
     tweets = pd.read_excel(xlsx_path, sheet_name="tweets_meta_data")
 
     users["label_raw"] = users[FINAL_LABEL_COL].apply(_parse_final_label)

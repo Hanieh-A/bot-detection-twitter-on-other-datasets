@@ -4,9 +4,9 @@ Only biography and tweet text enter the model. IDs/handles are used solely for j
 and reporting, never as model features. See README.md for dataset/label caveats.
 
 how to run:
-python run_text_tfidf2.py --dataset d1 --user-file ../datasets/dataset1.xlsx --user-sheet 1k_users --tweet-file ../datasets/dataset1.xlsx --tweet-sheet tweets_meta_data --label-column final-tag --user-id-column id --tweet-user-id-column id --bio-column description --tweet-text-column text --output-dir ../results_text_tfidf_word_d1
+python run_text_tfidf2.py --dataset d1 --user-file ../datasets/dataset1.xlsx --user-sheet 1k_users --tweet-file ../datasets/dataset1.xlsx --tweet-sheet tweets_meta_data --label-column final-tag --user-id-column id --tweet-user-id-column id --bio-column description --tweet-text-column text --output-dir ../LLM_Labels/results_text_tfidf_word_d1
 
-python run_text_tfidf2.py --dataset d2 --user-file ../datasets/all_users_.xlsx --user-sheet main --tweet-file ../datasets/all_users_.xlsx --tweet-sheet tweetsMetaData_1 tweetsMetaData_2 --label-column prob1 --user-id-column user_id --tweet-user-id-column id --bio-column clean_description --tweet-text-column text --output-dir ../Human_Labels/results_text_tfidf_word_d2
+python run_text_tfidf2.py --dataset d2 --user-file ../datasets/all_users_.xlsx --user-sheet main --tweet-file ../datasets/all_users_.xlsx --tweet-sheet tweetsMetaData_1 tweetsMetaData_2 --label-column LLM_bot_probability --user-id-column user_id --tweet-user-id-column id --bio-column clean_description --tweet-text-column text --output-dir ../LLM_Labels/results_text_tfidf_word_d2
 """
 from __future__ import annotations
 import matplotlib.pyplot as plt

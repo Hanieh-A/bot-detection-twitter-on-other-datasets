@@ -130,6 +130,7 @@ def engineer_behavioral_features(df, ref_date=REF_DATE):
 
     # --- Account-age rates (TRUE behavioral signal: can't be spoofed by text) ---
     created = df['created_at'].apply(parse_twitter_date)
+    created = pd.to_datetime(created, errors="coerce", utc=True)
     age_days = ((ref_date - created).dt.total_seconds() / 86400.0).clip(lower=1.0)
     out['account_age_days'] = age_days.fillna(age_days.median())
 

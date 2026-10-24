@@ -82,7 +82,7 @@ def load_dataset2(xlsx_path):
     main = pd.read_excel(xlsx_path, sheet_name="main")
     suspended = pd.read_excel(xlsx_path, sheet_name="suspend_users")
 
-    main["Bot_Probability_clean"] = main["prob1"].apply(_clean_prob)
+    main["Bot_Probability_clean"] = main["LLM_bot_probability"].apply(_clean_prob)
     main["bot"] = np.where(main["Bot_Probability_clean"].notna(
     ), (main["Bot_Probability_clean"] >= 0.5).astype(float), np.nan)
     main["label_source"] = np.where(
