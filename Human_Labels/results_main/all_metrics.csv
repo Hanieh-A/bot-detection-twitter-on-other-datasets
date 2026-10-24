@@ -1,0 +1,4 @@
+experiment,model,n,positive_rate,roc_auc_oof,average_precision_oof,accuracy_outer_mean,f1_outer_mean,precision_outer_mean,recall_outer_mean,roc_auc_outer_mean,roc_auc_outer_std,selected_threshold_median,evaluation,n_features
+D2-full-base,RF behavioral,2028,0.4625246548323471,0.6612986835155807,0.6197978343523259,0.5152745849297573,0.6520659942052623,0.4883280085801139,0.9819148936170212,0.6625595249900574,0.027080219360706544,0.2,nested stratified CV; preprocessing fit within each fold,24
+D2-full-extended,RF extended behavioral,2028,0.4625246548323471,0.7223944171671133,0.6875343439635051,0.6178677856838777,0.6687921547536342,0.5590597341738806,0.8347536693594266,0.7243193378712548,0.024844156461922576,0.4,nested stratified CV; preprocessing fit within each fold,44
+D2-Botometer-diagnostic,Botometer raw score,1320,,0.5220186335403727,,,,,,,,,diagnostic score; no model fitting,1
